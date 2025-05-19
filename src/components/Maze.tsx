@@ -73,7 +73,13 @@ export default function Maze({ width = 20, height = 20, size = 600 }: { width?: 
     const maze = generateMaze(width, height)
     gridRef.current = maze
     const canvas = canvasRef.current!
+    const dpr = window.devicePixelRatio || 1
+    canvas.width = size * dpr
+    canvas.height = size * dpr
+    canvas.style.width = `${size}px`
+    canvas.style.height = `${size}px`
     const ctx = canvas.getContext('2d')!
+    ctx.scale(dpr, dpr)
     const cellSize = size / width
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ctx.fillStyle = '#22c55e'
@@ -123,12 +129,19 @@ export default function Maze({ width = 20, height = 20, size = 600 }: { width?: 
 
   useEffect(() => {
     const drawCanvas = drawRef.current!
+    const dpr = window.devicePixelRatio || 1
+    drawCanvas.width = size * dpr
+    drawCanvas.height = size * dpr
+    drawCanvas.style.width = `${size}px`
+    drawCanvas.style.height = `${size}px`
     const drawCtx = drawCanvas.getContext('2d')!
+    drawCtx.scale(dpr, dpr)
     const cellSize = size / width
     drawCtx.lineWidth = cellSize / 2
     drawCtx.strokeStyle = '#3b82f6'
     drawCtx.lineCap = 'round'
     let drawing = false
+    let pointerDown = false
     let currentX = 0
     let currentY = 0
     const visited: boolean[][] = []
@@ -140,6 +153,7 @@ export default function Maze({ width = 20, height = 20, size = 600 }: { width?: 
     const cellCenter = (x: number, y: number) => [x * cellSize + cellSize / 2, y * cellSize + cellSize / 2]
 
     const start = (e: PointerEvent) => {
+      pointerDown = true
       const rect = drawCanvas.getBoundingClientRect()
       const x = Math.floor((e.clientX - rect.left) / cellSize)
       const y = Math.floor((e.clientY - rect.top) / cellSize)
@@ -153,18 +167,28 @@ export default function Maze({ width = 20, height = 20, size = 600 }: { width?: 
     }
 
     const move = (e: PointerEvent) => {
-      if (!drawing) return
       const rect = drawCanvas.getBoundingClientRect()
       const x = Math.floor((e.clientX - rect.left) / cellSize)
       const y = Math.floor((e.clientY - rect.top) / cellSize)
+      if (!drawing) {
+        if (pointerDown && visited[y]?.[x]) {
+          drawing = true
+          currentX = x
+          currentY = y
+          const [cx, cy] = cellCenter(x, y)
+          drawCtx.beginPath()
+          drawCtx.moveTo(cx, cy)
+        }
+        return
+      }
       if (x === currentX && y === currentY) return
       if (Math.abs(x - currentX) + Math.abs(y - currentY) !== 1) return
       const grid = gridRef.current
       const cell = grid[currentY][currentX]
-      if (x > currentX && cell.walls.right) return end()
-      if (x < currentX && cell.walls.left) return end()
-      if (y > currentY && cell.walls.bottom) return end()
-      if (y < currentY && cell.walls.top) return end()
+      if (x > currentX && cell.walls.right) return (drawing = false)
+      if (x < currentX && cell.walls.left) return (drawing = false)
+      if (y > currentY && cell.walls.bottom) return (drawing = false)
+      if (y < currentY && cell.walls.top) return (drawing = false)
       const [cx, cy] = cellCenter(x, y)
       drawCtx.lineTo(cx, cy)
       drawCtx.stroke()
@@ -175,6 +199,7 @@ export default function Maze({ width = 20, height = 20, size = 600 }: { width?: 
 
     const end = () => {
       drawing = false
+      pointerDown = false
     }
 
     drawCanvas.addEventListener('pointerdown', start)
