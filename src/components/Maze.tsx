@@ -131,8 +131,11 @@ export default function Maze({ width = 20, height = 20, size = 600 }: { width?: 
     let drawing = false
     let currentX = 0
     let currentY = 0
-    let lastX = 0
-    let lastY = 0
+    const visited: boolean[][] = []
+    for (let y = 0; y < height; y++) {
+      visited.push(new Array(width).fill(false))
+    }
+    visited[0][0] = true
 
     const cellCenter = (x: number, y: number) => [x * cellSize + cellSize / 2, y * cellSize + cellSize / 2]
 
@@ -140,9 +143,7 @@ export default function Maze({ width = 20, height = 20, size = 600 }: { width?: 
       const rect = drawCanvas.getBoundingClientRect()
       const x = Math.floor((e.clientX - rect.left) / cellSize)
       const y = Math.floor((e.clientY - rect.top) / cellSize)
-      if (x !== 0 || y !== 0) {
-        if (x !== lastX || y !== lastY) return
-      }
+      if (!visited[y][x]) return
       drawing = true
       currentX = x
       currentY = y
@@ -169,12 +170,11 @@ export default function Maze({ width = 20, height = 20, size = 600 }: { width?: 
       drawCtx.stroke()
       currentX = x
       currentY = y
+      visited[y][x] = true
     }
 
     const end = () => {
       drawing = false
-      lastX = currentX
-      lastY = currentY
     }
 
     drawCanvas.addEventListener('pointerdown', start)
@@ -190,7 +190,7 @@ export default function Maze({ width = 20, height = 20, size = 600 }: { width?: 
       drawCanvas.removeEventListener('pointerleave', end)
       drawCanvas.removeEventListener('pointercancel', end)
     }
-  }, [size, width])
+  }, [size, width, height])
 
   return (
     <div className='relative mx-auto' style={{ width: size, height: size }}>
