@@ -1,10 +1,9 @@
 import Maze from './components/Maze'
-import './App.css'
 
 function App() {
   return (
-    <div id="root-container">
-      <h1>Maze Playground</h1>
+    <div className='container mx-auto p-8 text-center flex flex-col items-center gap-4'>
+      <h1 className='text-3xl font-bold'>Maze Playground</h1>
       <Maze width={20} height={20} size={600} />
     </div>
   )
