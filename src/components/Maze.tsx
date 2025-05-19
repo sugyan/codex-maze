@@ -76,10 +76,16 @@ export default function Maze({ width = 20, height = 20, size = 600 }: { width?: 
     const ctx = canvas.getContext('2d')!
     const cellSize = size / width
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-    ctx.fillStyle = '#f0fdfa'
+    ctx.fillStyle = '#22c55e'
     ctx.fillRect(0, 0, cellSize, cellSize)
-    ctx.fillStyle = '#fef2f2'
+    ctx.fillStyle = '#ef4444'
     ctx.fillRect((width - 1) * cellSize, (height - 1) * cellSize, cellSize, cellSize)
+    ctx.fillStyle = '#ffffff'
+    ctx.font = `${cellSize * 0.6}px sans-serif`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText('S', cellSize / 2, cellSize / 2)
+    ctx.fillText('G', (width - 0.5) * cellSize, (height - 0.5) * cellSize)
     ctx.strokeStyle = '#1f2937'
     ctx.lineWidth = 2
 
@@ -125,6 +131,8 @@ export default function Maze({ width = 20, height = 20, size = 600 }: { width?: 
     let drawing = false
     let currentX = 0
     let currentY = 0
+    let lastX = 0
+    let lastY = 0
 
     const cellCenter = (x: number, y: number) => [x * cellSize + cellSize / 2, y * cellSize + cellSize / 2]
 
@@ -132,7 +140,9 @@ export default function Maze({ width = 20, height = 20, size = 600 }: { width?: 
       const rect = drawCanvas.getBoundingClientRect()
       const x = Math.floor((e.clientX - rect.left) / cellSize)
       const y = Math.floor((e.clientY - rect.top) / cellSize)
-      if (x !== 0 || y !== 0) return
+      if (x !== 0 || y !== 0) {
+        if (x !== lastX || y !== lastY) return
+      }
       drawing = true
       currentX = x
       currentY = y
@@ -163,6 +173,8 @@ export default function Maze({ width = 20, height = 20, size = 600 }: { width?: 
 
     const end = () => {
       drawing = false
+      lastX = currentX
+      lastY = currentY
     }
 
     drawCanvas.addEventListener('pointerdown', start)
